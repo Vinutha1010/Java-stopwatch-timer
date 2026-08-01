@@ -198,13 +198,15 @@ public class TimeTrackApp extends JFrame {
         cardPanel.add(timeDisplay);
 
         cardPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    resetTimer();
-                }
-            }
-        });
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 1) {
+            toggleStart(); // Single click anywhere on time card starts or pauses!
+        } else if (e.getClickCount() == 2) {
+            resetTimer();  // Double click resets!
+        }
+    }
+});
 
         // Compact Timer Input Panel
         inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
