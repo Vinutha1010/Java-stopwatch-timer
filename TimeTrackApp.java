@@ -26,7 +26,7 @@ public class TimeTrackApp extends JFrame {
             this.accent = Color.decode(accent);
             this.crown = Color.decode(crown);
 
-            this.displayFont = new Font(fontName, Font.BOLD, 26);
+            this.displayFont = new Font(fontName, Font.BOLD, 24);
             this.bodyFont = new Font(fontName, Font.BOLD, 10);
         }
     }
@@ -42,29 +42,29 @@ public class TimeTrackApp extends JFrame {
     private long elapsedTime = 0; 
     private long timerDuration = 0; 
     private Timer clockTimer;
-    private Timer collapseTimer; // 10-second inactivity timer
+    private Timer collapseTimer;
 
     // Window Drag Coordinates
     private Point dragOffset;
 
     // UI Components
     private JPanel mainContainer, stemPanel, bodyPanel, headerPanel, modePanel, cardPanel, inputPanel, ctrlPanel, footerPanel;
-    private JLabel titleLabel, timeDisplay, minLabel;
+    private JLabel titleLabel, timeDisplay, hLabel, mLabel, sLabel;
     private JButton swBtn, tmBtn, startBtn, resetBtn, closeBtn, minBtn;
-    private JButton p15Btn, p25Btn, p45Btn;
-    private JTextField minutesInput;
+    private JButton p30sBtn, p5mBtn, p25mBtn, p1hBtn;
+    private JTextField hoursInput, minutesInput, secondsInput;
     private JComboBox<String> themeSelector;
 
     public TimeTrackApp() {
         setUndecorated(true);
         setAlwaysOnTop(true);
-        setSize(300, 330);
+        setSize(310, 340);
         setBackground(new Color(0, 0, 0, 0));
 
         // Position near top right of screen
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Rectangle screenBounds = ge.getMaximumWindowBounds();
-        setLocation(screenBounds.width - 320, 80);
+        setLocation(screenBounds.width - 330, 80);
 
         initializeThemes();
         loadSavedTheme();
@@ -124,7 +124,7 @@ public class TimeTrackApp extends JFrame {
         stemPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
-                if (collapsed) return; // Hide crown in collapsed view
+                if (collapsed) return;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Theme t = themes.get(currentTheme);
@@ -136,13 +136,13 @@ public class TimeTrackApp extends JFrame {
             }
         };
         stemPanel.setOpaque(false);
-        stemPanel.setPreferredSize(new Dimension(300, 26));
+        stemPanel.setPreferredSize(new Dimension(310, 26));
 
         // Circular Body Panel
         bodyPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
-                if (collapsed) return; // Hide outer circle frame in collapsed view
+                if (collapsed) return;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Theme t = themes.get(currentTheme);
@@ -155,7 +155,7 @@ public class TimeTrackApp extends JFrame {
             }
         };
         bodyPanel.setOpaque(false);
-        bodyPanel.setPreferredSize(new Dimension(300, 300));
+        bodyPanel.setPreferredSize(new Dimension(310, 310));
         bodyPanel.setLayout(new BoxLayout(bodyPanel, BoxLayout.Y_AXIS));
 
         // Header Panel
@@ -211,7 +211,7 @@ public class TimeTrackApp extends JFrame {
         modePanel.add(swBtn);
         modePanel.add(tmBtn);
 
-        // Display Card (Handles Single Click, Double Click, and Hover Un-collapse)
+        // Display Card (Properly Centered Text)
         cardPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -224,8 +224,8 @@ public class TimeTrackApp extends JFrame {
             }
         };
         cardPanel.setOpaque(false);
-        cardPanel.setPreferredSize(new Dimension(175, 52));
-        cardPanel.setMaximumSize(new Dimension(175, 52));
+        cardPanel.setPreferredSize(new Dimension(190, 56));
+        cardPanel.setMaximumSize(new Dimension(190, 56));
         cardPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         timeDisplay = new JLabel("00:00:00");
@@ -234,7 +234,7 @@ public class TimeTrackApp extends JFrame {
         cardPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                expandView(); // Instantly un-collapse on cursor hover!
+                expandView();
             }
 
             @Override
@@ -247,28 +247,43 @@ public class TimeTrackApp extends JFrame {
             }
         });
 
-        // Compact Timer Input & Presets Panel
-        inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
+        // Expanded Timer Input Panel (Hours, Minutes, Seconds)
+        inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 0));
         inputPanel.setOpaque(false);
-        inputPanel.setMaximumSize(new Dimension(190, 26));
+        inputPanel.setMaximumSize(new Dimension(210, 26));
+
+        hoursInput = new JTextField("0", 2);
+        hoursInput.setHorizontalAlignment(JTextField.CENTER);
+        hLabel = new JLabel("h ");
 
         minutesInput = new JTextField("25", 2);
         minutesInput.setHorizontalAlignment(JTextField.CENTER);
-        minLabel = new JLabel("m ");
+        mLabel = new JLabel("m ");
 
-        p15Btn = createCompactPresetButton("15m");
-        p25Btn = createCompactPresetButton("25m");
-        p45Btn = createCompactPresetButton("45m");
+        secondsInput = new JTextField("0", 2);
+        secondsInput.setHorizontalAlignment(JTextField.CENTER);
+        sLabel = new JLabel("s ");
 
-        p15Btn.addActionListener(e -> setPreset(15));
-        p25Btn.addActionListener(e -> setPreset(25));
-        p45Btn.addActionListener(e -> setPreset(45));
+        p30sBtn = createCompactPresetButton("30s");
+        p5mBtn  = createCompactPresetButton("5m");
+        p25mBtn = createCompactPresetButton("25m");
+        p1hBtn  = createCompactPresetButton("1h");
 
+        p30sBtn.addActionListener(e -> setTimePreset(0, 0, 30));
+        p5mBtn.addActionListener(e  -> setTimePreset(0, 5, 0));
+        p25mBtn.addActionListener(e -> setTimePreset(0, 25, 0));
+        p1hBtn.addActionListener(e  -> setTimePreset(1, 0, 0));
+
+        inputPanel.add(hoursInput);
+        inputPanel.add(hLabel);
         inputPanel.add(minutesInput);
-        inputPanel.add(minLabel);
-        inputPanel.add(p15Btn);
-        inputPanel.add(p25Btn);
-        inputPanel.add(p45Btn);
+        inputPanel.add(mLabel);
+        inputPanel.add(secondsInput);
+        inputPanel.add(sLabel);
+        inputPanel.add(p30sBtn);
+        inputPanel.add(p5mBtn);
+        inputPanel.add(p25mBtn);
+        inputPanel.add(p1hBtn);
         inputPanel.setVisible(false);
 
         // Control Buttons Panel
@@ -315,13 +330,11 @@ public class TimeTrackApp extends JFrame {
         mainContainer.add(bodyPanel, BorderLayout.CENTER);
     }
 
-    // Auto-Collapse Timer Configuration (10 Seconds Inactivity)
     private void setupAutoCollapse() {
         collapseTimer = new Timer(10000, e -> collapseView());
         collapseTimer.setRepeats(false);
         collapseTimer.start();
 
-        // Mouse motion listener resets the 10-second countdown whenever cursor moves
         MouseAdapter mouseTracker = new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -352,7 +365,8 @@ public class TimeTrackApp extends JFrame {
         footerPanel.setVisible(false);
         stemPanel.setVisible(false);
 
-        setSize(185, 60); // Collapse window strictly to card size
+        // Adjusted height so the card text renders cleanly without top/bottom clipping
+        setSize(190, 56);
         revalidate();
         repaint();
     }
@@ -367,7 +381,7 @@ public class TimeTrackApp extends JFrame {
             footerPanel.setVisible(true);
             stemPanel.setVisible(true);
 
-            setSize(300, 330); // Restore full circular layout
+            setSize(310, 340);
             revalidate();
             repaint();
         }
@@ -386,7 +400,7 @@ public class TimeTrackApp extends JFrame {
         JButton btn = new JButton(text);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
-        btn.setMargin(new Insets(1, 4, 1, 4));
+        btn.setMargin(new Insets(1, 3, 1, 3));
         return btn;
     }
 
@@ -411,10 +425,14 @@ public class TimeTrackApp extends JFrame {
         timeDisplay.setFont(t.displayFont);
         startBtn.setFont(t.bodyFont);
         resetBtn.setFont(t.bodyFont);
-        minLabel.setFont(t.bodyFont);
-        p15Btn.setFont(t.bodyFont);
-        p25Btn.setFont(t.bodyFont);
-        p45Btn.setFont(t.bodyFont);
+        hLabel.setFont(t.bodyFont);
+        mLabel.setFont(t.bodyFont);
+        sLabel.setFont(t.bodyFont);
+
+        p30sBtn.setFont(t.bodyFont);
+        p5mBtn.setFont(t.bodyFont);
+        p25mBtn.setFont(t.bodyFont);
+        p1hBtn.setFont(t.bodyFont);
 
         titleLabel.setForeground(t.text);
         closeBtn.setForeground(t.text);
@@ -426,14 +444,18 @@ public class TimeTrackApp extends JFrame {
         tmBtn.setForeground(mode.equals("Timer") ? Color.WHITE : t.text);
 
         timeDisplay.setForeground(t.accent);
-        minLabel.setForeground(t.text);
+        hLabel.setForeground(t.text);
+        mLabel.setForeground(t.text);
+        sLabel.setForeground(t.text);
 
-        p15Btn.setBackground(t.card);
-        p15Btn.setForeground(t.text);
-        p25Btn.setBackground(t.card);
-        p25Btn.setForeground(t.text);
-        p45Btn.setBackground(t.card);
-        p45Btn.setForeground(t.text);
+        p30sBtn.setBackground(t.card);
+        p30sBtn.setForeground(t.text);
+        p5mBtn.setBackground(t.card);
+        p5mBtn.setForeground(t.text);
+        p25mBtn.setBackground(t.card);
+        p25mBtn.setForeground(t.text);
+        p1hBtn.setBackground(t.card);
+        p1hBtn.setForeground(t.text);
 
         startBtn.setBackground(t.btn);
         startBtn.setForeground(Color.WHITE);
@@ -446,8 +468,10 @@ public class TimeTrackApp extends JFrame {
         mainContainer.repaint();
     }
 
-    private void setPreset(int minutes) {
-        minutesInput.setText(String.valueOf(minutes));
+    private void setTimePreset(int hrs, int mins, int secs) {
+        hoursInput.setText(String.valueOf(hrs));
+        minutesInput.setText(String.valueOf(mins));
+        secondsInput.setText(String.valueOf(secs));
         resetTimer();
     }
 
@@ -460,7 +484,7 @@ public class TimeTrackApp extends JFrame {
 
             if (mode.equals("Timer")) {
                 inputPanel.setVisible(true);
-                timeDisplay.setText("25:00");
+                timeDisplay.setText("00:25:00");
             } else {
                 inputPanel.setVisible(false);
                 timeDisplay.setText("00:00:00");
@@ -477,10 +501,12 @@ public class TimeTrackApp extends JFrame {
         } else {
             if (mode.equals("Timer") && elapsedTime == 0) {
                 try {
-                    double mins = Double.parseDouble(minutesInput.getText());
-                    timerDuration = (long) (mins * 60 * 1000);
+                    long h = Long.parseLong(hoursInput.getText().trim());
+                    long m = Long.parseLong(minutesInput.getText().trim());
+                    long s = Long.parseLong(secondsInput.getText().trim());
+                    timerDuration = (h * 3600 + m * 60 + s) * 1000;
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Enter a valid number of minutes.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Enter valid numbers for hours, minutes, and seconds.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
@@ -498,13 +524,12 @@ public class TimeTrackApp extends JFrame {
             timeDisplay.setText("00:00:00");
         } else {
             try {
-                double mins = Double.parseDouble(minutesInput.getText());
-                long totalSecs = (long) (mins * 60);
-                long m = totalSecs / 60;
-                long s = totalSecs % 60;
-                timeDisplay.setText(String.format("%02d:%02d", m, s));
+                long h = Long.parseLong(hoursInput.getText().trim());
+                long m = Long.parseLong(minutesInput.getText().trim());
+                long s = Long.parseLong(secondsInput.getText().trim());
+                timeDisplay.setText(String.format("%02d:%02d:%02d", h, m, s));
             } catch (Exception ex) {
-                timeDisplay.setText("25:00");
+                timeDisplay.setText("00:25:00");
             }
         }
     }
@@ -523,16 +548,17 @@ public class TimeTrackApp extends JFrame {
                 long remainingMillis = timerDuration - elapsedTime;
                 if (remainingMillis <= 0) {
                     running = false;
-                    timeDisplay.setText("00:00");
+                    timeDisplay.setText("00:00:00");
                     startBtn.setText("Start");
-                    expandView(); // Always expand view when timer completes
+                    expandView();
                     playChimeSound();
                     JOptionPane.showMessageDialog(this, "Time's up! Great focus session! 💕", "Timer Complete", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     long totalSecs = remainingMillis / 1000;
-                    long mins = totalSecs / 60;
+                    long hrs = totalSecs / 3600;
+                    long mins = (totalSecs % 3600) / 60;
                     long secs = totalSecs % 60;
-                    timeDisplay.setText(String.format("%02d:%02d", mins, secs));
+                    timeDisplay.setText(String.format("%02d:%02d:%02d", hrs, mins, secs));
                 }
             }
         }
