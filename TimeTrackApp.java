@@ -26,7 +26,7 @@ public class TimeTrackApp extends JFrame {
             this.accent = Color.decode(accent);
             this.crown = Color.decode(crown);
 
-            this.displayFont = new Font(fontName, Font.BOLD, 24);
+            this.displayFont = new Font(fontName, Font.BOLD, 22);
             this.bodyFont = new Font(fontName, Font.BOLD, 10);
         }
     }
@@ -47,8 +47,9 @@ public class TimeTrackApp extends JFrame {
     // Window Drag Coordinates
     private Point dragOffset;
 
-    // UI Components
+    // UI Components & Spacers
     private JPanel mainContainer, stemPanel, bodyPanel, headerPanel, modePanel, cardPanel, inputPanel, ctrlPanel, footerPanel;
+    private Component topStrut, bottomStrut; // References to layout spacers
     private JLabel titleLabel, timeDisplay, hLabel, mLabel, sLabel;
     private JButton swBtn, tmBtn, startBtn, resetBtn, closeBtn, minBtn;
     private JButton p30sBtn, p5mBtn, p25mBtn, p1hBtn;
@@ -211,7 +212,7 @@ public class TimeTrackApp extends JFrame {
         modePanel.add(swBtn);
         modePanel.add(tmBtn);
 
-        // Display Card (Properly Centered Text)
+        // Display Card
         cardPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -224,8 +225,8 @@ public class TimeTrackApp extends JFrame {
             }
         };
         cardPanel.setOpaque(false);
-        cardPanel.setPreferredSize(new Dimension(190, 56));
-        cardPanel.setMaximumSize(new Dimension(190, 56));
+        cardPanel.setPreferredSize(new Dimension(200, 50));
+        cardPanel.setMaximumSize(new Dimension(200, 50));
         cardPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         timeDisplay = new JLabel("00:00:00");
@@ -247,7 +248,7 @@ public class TimeTrackApp extends JFrame {
             }
         });
 
-        // Expanded Timer Input Panel (Hours, Minutes, Seconds)
+        // Expanded Timer Input Panel
         inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 0));
         inputPanel.setOpaque(false);
         inputPanel.setMaximumSize(new Dimension(210, 26));
@@ -311,8 +312,12 @@ public class TimeTrackApp extends JFrame {
         });
         footerPanel.add(themeSelector);
 
+        // Saved Struts to enable/disable during collapse
+        topStrut = Box.createVerticalStrut(32);
+        bottomStrut = Box.createVerticalStrut(26);
+
         // Layout Assembly
-        bodyPanel.add(Box.createVerticalStrut(32));
+        bodyPanel.add(topStrut);
         bodyPanel.add(headerPanel);
         bodyPanel.add(Box.createVerticalStrut(6));
         bodyPanel.add(modePanel);
@@ -324,7 +329,7 @@ public class TimeTrackApp extends JFrame {
         bodyPanel.add(ctrlPanel);
         bodyPanel.add(Box.createGlue());
         bodyPanel.add(footerPanel);
-        bodyPanel.add(Box.createVerticalStrut(26));
+        bodyPanel.add(bottomStrut);
 
         mainContainer.add(stemPanel, BorderLayout.NORTH);
         mainContainer.add(bodyPanel, BorderLayout.CENTER);
@@ -364,9 +369,11 @@ public class TimeTrackApp extends JFrame {
         ctrlPanel.setVisible(false);
         footerPanel.setVisible(false);
         stemPanel.setVisible(false);
+        
+        topStrut.setVisible(false);
+        bottomStrut.setVisible(false);
 
-        // Adjusted height so the card text renders cleanly without top/bottom clipping
-        setSize(190, 56);
+        setSize(200, 50); // Perfectly match display card size
         revalidate();
         repaint();
     }
@@ -380,6 +387,9 @@ public class TimeTrackApp extends JFrame {
             ctrlPanel.setVisible(true);
             footerPanel.setVisible(true);
             stemPanel.setVisible(true);
+
+            topStrut.setVisible(true);
+            bottomStrut.setVisible(true);
 
             setSize(310, 340);
             revalidate();
