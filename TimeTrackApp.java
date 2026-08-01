@@ -37,10 +37,12 @@ public class TimeTrackApp extends JFrame {
     // Application State
     private String mode = "Stopwatch"; 
     private boolean running = false;
+    private boolean collapsed = false;
     private long startTime = 0;
     private long elapsedTime = 0; 
     private long timerDuration = 0; 
     private Timer clockTimer;
+    private Timer collapseTimer; // 10-second inactivity timer
 
     // Window Drag Coordinates
     private Point dragOffset;
@@ -68,6 +70,7 @@ public class TimeTrackApp extends JFrame {
         loadSavedTheme();
         setupUI();
         setupDragAndDrop();
+        setupAutoCollapse();
         applyTheme();
 
         clockTimer = new Timer(100, e -> updateClock());
@@ -121,6 +124,7 @@ public class TimeTrackApp extends JFrame {
         stemPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
+                if (collapsed) return; // Hide crown in collapsed view
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Theme t = themes.get(currentTheme);
@@ -138,6 +142,7 @@ public class TimeTrackApp extends JFrame {
         bodyPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
+                if (collapsed) return; // Hide outer circle frame in collapsed view
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Theme t = themes.get(currentTheme);
@@ -158,7 +163,6 @@ public class TimeTrackApp extends JFrame {
         headerPanel.setOpaque(false);
         headerPanel.setMaximumSize(new Dimension(185, 20));
 
-        // Title Box with Vector Clock Icon + Hard Spacing Offset
         JPanel titleBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -176,7 +180,6 @@ public class TimeTrackApp extends JFrame {
         };
         titleBox.setOpaque(false);
         
-        // Add 16px explicit gap so text NEVER overlaps the vector clock icon
         titleLabel = new JLabel("TimeTrack");
         titleBox.add(Box.createHorizontalStrut(16));
         titleBox.add(titleLabel);
@@ -208,7 +211,7 @@ public class TimeTrackApp extends JFrame {
         modePanel.add(swBtn);
         modePanel.add(tmBtn);
 
-        // Display Card (Single Click Start/Pause + Double Click Reset)
+        // Display Card (Handles Single Click, Double Click, and Hover Un-collapse)
         cardPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -229,6 +232,11 @@ public class TimeTrackApp extends JFrame {
         cardPanel.add(timeDisplay);
 
         cardPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                expandView(); // Instantly un-collapse on cursor hover!
+            }
+
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {
@@ -274,7 +282,7 @@ public class TimeTrackApp extends JFrame {
         ctrlPanel.add(startBtn);
         ctrlPanel.add(resetBtn);
 
-        // Footer / Theme Dropdown Selector
+        // Footer / Theme Selector
         footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         footerPanel.setOpaque(false);
 
@@ -305,6 +313,65 @@ public class TimeTrackApp extends JFrame {
 
         mainContainer.add(stemPanel, BorderLayout.NORTH);
         mainContainer.add(bodyPanel, BorderLayout.CENTER);
+    }
+
+    // Auto-Collapse Timer Configuration (10 Seconds Inactivity)
+    private void setupAutoCollapse() {
+        collapseTimer = new Timer(10000, e -> collapseView());
+        collapseTimer.setRepeats(false);
+        collapseTimer.start();
+
+        // Mouse motion listener resets the 10-second countdown whenever cursor moves
+        MouseAdapter mouseTracker = new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                resetCollapseTimer();
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                expandView();
+            }
+        };
+
+        addMouseMotionListener(mouseTracker);
+        addMouseListener(mouseTracker);
+    }
+
+    private void resetCollapseTimer() {
+        if (!collapsed) {
+            collapseTimer.restart();
+        }
+    }
+
+    private void collapseView() {
+        collapsed = true;
+        headerPanel.setVisible(false);
+        modePanel.setVisible(false);
+        inputPanel.setVisible(false);
+        ctrlPanel.setVisible(false);
+        footerPanel.setVisible(false);
+        stemPanel.setVisible(false);
+
+        setSize(185, 60); // Collapse window strictly to card size
+        revalidate();
+        repaint();
+    }
+
+    private void expandView() {
+        if (collapsed) {
+            collapsed = false;
+            headerPanel.setVisible(true);
+            modePanel.setVisible(true);
+            if (mode.equals("Timer")) inputPanel.setVisible(true);
+            ctrlPanel.setVisible(true);
+            footerPanel.setVisible(true);
+            stemPanel.setVisible(true);
+
+            setSize(300, 330); // Restore full circular layout
+            revalidate();
+            repaint();
+        }
+        resetCollapseTimer();
     }
 
     private JButton createFlatButton(String text) {
@@ -458,6 +525,7 @@ public class TimeTrackApp extends JFrame {
                     running = false;
                     timeDisplay.setText("00:00");
                     startBtn.setText("Start");
+                    expandView(); // Always expand view when timer completes
                     playChimeSound();
                     JOptionPane.showMessageDialog(this, "Time's up! Great focus session! 💕", "Timer Complete", JOptionPane.INFORMATION_MESSAGE);
                 } else {
