@@ -23,12 +23,12 @@ public class TimeTrackApp extends JFrame {
             this.crown = Color.decode(crown);
 
             this.displayFont = new Font(fontName, Font.BOLD, 26);
-            this.bodyFont = new Font(fontName, Font.BOLD, 11);
+            this.bodyFont = new Font(fontName, Font.BOLD, 10);
         }
     }
 
     private final Map<String, Theme> themes = new LinkedHashMap<>();
-    private String currentTheme = "BarbiePink"; // Defaulted to Barbie Pink!
+    private String currentTheme = "BarbiePink";
 
     // Application State
     private String mode = "Stopwatch"; 
@@ -45,20 +45,20 @@ public class TimeTrackApp extends JFrame {
     private JPanel mainContainer, stemPanel, bodyPanel, headerPanel, modePanel, cardPanel, inputPanel, ctrlPanel, footerPanel;
     private JLabel titleLabel, timeDisplay, minLabel;
     private JButton swBtn, tmBtn, startBtn, resetBtn, closeBtn, minBtn;
-    private JButton p15Btn, p25Btn, p45Btn; // Preset Buttons
+    private JButton p15Btn, p25Btn, p45Btn;
     private JTextField minutesInput;
     private JComboBox<String> themeSelector;
 
     public TimeTrackApp() {
         setUndecorated(true);
         setAlwaysOnTop(true);
-        setSize(280, 310);
-        setBackground(new Color(0, 0, 0, 0)); // Transparent window background
+        setSize(300, 330); // Expanded size to prevent crowding
+        setBackground(new Color(0, 0, 0, 0));
 
         // Position near top right of screen
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Rectangle screenBounds = ge.getMaximumWindowBounds();
-        setLocation(screenBounds.width - 300, 80);
+        setLocation(screenBounds.width - 320, 80);
 
         initializeThemes();
         setupUI();
@@ -70,7 +70,6 @@ public class TimeTrackApp extends JFrame {
     }
 
     private void initializeThemes() {
-        // Includes Barbie Pink + 11 other themes
         themes.put("BarbiePink",  new Theme("#ff66b2", "#fff0f5", "#d6006e", "#ff1493", "#c70067", "#ff007f", "Trebuchet MS"));
         themes.put("Cyberpunk",   new Theme("#0f0f1b", "#1a1a2e", "#00fff5", "#ff007f", "#ffe600", "#ff007f", "Consolas"));
         themes.put("Synthwave",   new Theme("#1a002c", "#2d004d", "#ff71ce", "#01cdfe", "#05ffa1", "#b967ff", "Impact"));
@@ -91,7 +90,7 @@ public class TimeTrackApp extends JFrame {
         mainContainer.setLayout(new BorderLayout());
         setContentPane(mainContainer);
 
-        // Stem Panel
+        // Crown / Stem Panel
         stemPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -106,7 +105,7 @@ public class TimeTrackApp extends JFrame {
             }
         };
         stemPanel.setOpaque(false);
-        stemPanel.setPreferredSize(new Dimension(280, 26));
+        stemPanel.setPreferredSize(new Dimension(300, 26));
 
         // Circular Body Panel
         bodyPanel = new JPanel() {
@@ -124,15 +123,14 @@ public class TimeTrackApp extends JFrame {
             }
         };
         bodyPanel.setOpaque(false);
-        bodyPanel.setPreferredSize(new Dimension(280, 280));
+        bodyPanel.setPreferredSize(new Dimension(300, 300));
         bodyPanel.setLayout(new BoxLayout(bodyPanel, BoxLayout.Y_AXIS));
 
-        // Inset Header Panel
+        // Header Panel (Inlined properly to stay in circle)
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
-        headerPanel.setMaximumSize(new Dimension(170, 22));
+        headerPanel.setMaximumSize(new Dimension(180, 20));
 
-        // Title Box with Vector Clock Icon
         JPanel titleBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -142,9 +140,9 @@ public class TimeTrackApp extends JFrame {
                 Theme t = themes.get(currentTheme);
                 g2.setColor(t.accent);
                 g2.setStroke(new BasicStroke(1.5f));
-                g2.drawOval(1, 3, 11, 11);
-                g2.drawLine(6, 8, 6, 5);
-                g2.drawLine(6, 8, 9, 8);
+                g2.drawOval(1, 2, 11, 11);
+                g2.drawLine(6, 7, 6, 4);
+                g2.drawLine(6, 7, 9, 7);
                 g2.dispose();
             }
         };
@@ -152,7 +150,6 @@ public class TimeTrackApp extends JFrame {
         titleLabel = new JLabel("   TimeTrack");
         titleBox.add(titleLabel);
 
-        // Window Controls
         JPanel windowControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 1, 0));
         windowControls.setOpaque(false);
 
@@ -169,7 +166,7 @@ public class TimeTrackApp extends JFrame {
         headerPanel.add(windowControls, BorderLayout.EAST);
 
         // Mode Switcher Panel
-        modePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 2));
+        modePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         modePanel.setOpaque(false);
 
         swBtn = createFlatButton("Stopwatch");
@@ -180,7 +177,7 @@ public class TimeTrackApp extends JFrame {
         modePanel.add(swBtn);
         modePanel.add(tmBtn);
 
-        // Digital Display Card with Double-Click Quick Reset
+        // Time Display Card
         cardPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -188,19 +185,18 @@ public class TimeTrackApp extends JFrame {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Theme t = themes.get(currentTheme);
                 g2.setColor(t.card);
-                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 18, 18));
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 16, 16));
                 g2.dispose();
             }
         };
         cardPanel.setOpaque(false);
-        cardPanel.setPreferredSize(new Dimension(185, 54));
-        cardPanel.setMaximumSize(new Dimension(185, 54));
+        cardPanel.setPreferredSize(new Dimension(175, 52));
+        cardPanel.setMaximumSize(new Dimension(175, 52));
         cardPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         timeDisplay = new JLabel("00:00:00");
         cardPanel.add(timeDisplay);
 
-        // Double Click Gesture Handler for Display Card
         cardPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -210,16 +206,18 @@ public class TimeTrackApp extends JFrame {
             }
         });
 
-        // Timer Input & Quick Preset Panel
-        inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+        // Compact Timer Input Panel
+        inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
         inputPanel.setOpaque(false);
-        minutesInput = new JTextField("25", 3);
-        minutesInput.setHorizontalAlignment(JTextField.CENTER);
-        minLabel = new JLabel("m");
+        inputPanel.setMaximumSize(new Dimension(190, 26));
 
-        p15Btn = createFlatButton("15m");
-        p25Btn = createFlatButton("25m");
-        p45Btn = createFlatButton("45m");
+        minutesInput = new JTextField("25", 2);
+        minutesInput.setHorizontalAlignment(JTextField.CENTER);
+        minLabel = new JLabel("m ");
+
+        p15Btn = createCompactPresetButton("15m");
+        p25Btn = createCompactPresetButton("25m");
+        p45Btn = createCompactPresetButton("45m");
 
         p15Btn.addActionListener(e -> setPreset(15));
         p25Btn.addActionListener(e -> setPreset(25));
@@ -233,7 +231,7 @@ public class TimeTrackApp extends JFrame {
         inputPanel.setVisible(false);
 
         // Controls Panel
-        ctrlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 2));
+        ctrlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
         ctrlPanel.setOpaque(false);
         startBtn = createFlatButton("Start");
         resetBtn = createFlatButton("Reset");
@@ -243,8 +241,8 @@ public class TimeTrackApp extends JFrame {
         ctrlPanel.add(startBtn);
         ctrlPanel.add(resetBtn);
 
-        // Footer / Theme Selector
-        footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        // Footer / Theme Dropdown
+        footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         footerPanel.setOpaque(false);
 
         String[] themeNames = themes.keySet().toArray(new String[0]);
@@ -256,19 +254,20 @@ public class TimeTrackApp extends JFrame {
         });
         footerPanel.add(themeSelector);
 
-        // Layout Assembly inside Circular Frame
-        bodyPanel.add(Box.createVerticalStrut(30));
+        // Assembly Inside Circle Frame
+        bodyPanel.add(Box.createVerticalStrut(32));
         bodyPanel.add(headerPanel);
-        bodyPanel.add(Box.createVerticalStrut(4));
+        bodyPanel.add(Box.createVerticalStrut(6));
         bodyPanel.add(modePanel);
         bodyPanel.add(Box.createVerticalStrut(6));
         bodyPanel.add(cardPanel);
+        bodyPanel.add(Box.createVerticalStrut(4));
         bodyPanel.add(inputPanel);
         bodyPanel.add(Box.createVerticalStrut(6));
         bodyPanel.add(ctrlPanel);
         bodyPanel.add(Box.createGlue());
         bodyPanel.add(footerPanel);
-        bodyPanel.add(Box.createVerticalStrut(22));
+        bodyPanel.add(Box.createVerticalStrut(26));
 
         mainContainer.add(stemPanel, BorderLayout.NORTH);
         mainContainer.add(bodyPanel, BorderLayout.CENTER);
@@ -278,6 +277,15 @@ public class TimeTrackApp extends JFrame {
         JButton btn = new JButton(text);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
+        btn.setMargin(new Insets(3, 8, 3, 8));
+        return btn;
+    }
+
+    private JButton createCompactPresetButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setMargin(new Insets(1, 4, 1, 4));
         return btn;
     }
 
@@ -296,7 +304,6 @@ public class TimeTrackApp extends JFrame {
     private void applyTheme() {
         Theme t = themes.get(currentTheme);
 
-        // Apply Fonts
         titleLabel.setFont(t.bodyFont);
         swBtn.setFont(t.bodyFont);
         tmBtn.setFont(t.bodyFont);
@@ -308,7 +315,6 @@ public class TimeTrackApp extends JFrame {
         p25Btn.setFont(t.bodyFont);
         p45Btn.setFont(t.bodyFont);
 
-        // Apply Color Palette
         titleLabel.setForeground(t.text);
         closeBtn.setForeground(t.text);
         minBtn.setForeground(t.text);
@@ -430,7 +436,6 @@ public class TimeTrackApp extends JFrame {
         }
     }
 
-    // Generated Synthesizer Chime Sound
     private void playChimeSound() {
         new Thread(() -> {
             try {
@@ -440,12 +445,10 @@ public class TimeTrackApp extends JFrame {
                 sdl.open(af);
                 sdl.start();
 
-                // Tone 1: 880Hz (A5)
                 for (int i = 0; i < 2000; i++) {
                     double angle = i / (8000f / 880) * 2.0 * Math.PI;
                     buf[i] = (byte) (Math.sin(angle) * 80);
                 }
-                // Tone 2: 1046Hz (C6)
                 for (int i = 2000; i < 6000; i++) {
                     double angle = i / (8000f / 1046) * 2.0 * Math.PI;
                     buf[i] = (byte) (Math.sin(angle) * 80);
