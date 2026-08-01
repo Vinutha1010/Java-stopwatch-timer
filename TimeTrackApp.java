@@ -4,10 +4,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
+import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class TimeTrackApp extends JFrame {
+
+    private static final String CONFIG_FILE = "config.properties";
 
     // Theme Data Structure
     static class Theme {
@@ -28,7 +32,7 @@ public class TimeTrackApp extends JFrame {
     }
 
     private final Map<String, Theme> themes = new LinkedHashMap<>();
-    private String currentTheme = "BarbiePink";
+    private String currentTheme = "BarbiePink"; // Default theme if no saved config exists
 
     // Application State
     private String mode = "Stopwatch"; 
@@ -52,7 +56,7 @@ public class TimeTrackApp extends JFrame {
     public TimeTrackApp() {
         setUndecorated(true);
         setAlwaysOnTop(true);
-        setSize(300, 330); // Expanded size to prevent crowding
+        setSize(300, 330);
         setBackground(new Color(0, 0, 0, 0));
 
         // Position near top right of screen
@@ -61,6 +65,7 @@ public class TimeTrackApp extends JFrame {
         setLocation(screenBounds.width - 320, 80);
 
         initializeThemes();
+        loadSavedTheme(); // Restore theme preference from disk
         setupUI();
         setupDragAndDrop();
         applyTheme();
@@ -82,6 +87,30 @@ public class TimeTrackApp extends JFrame {
         themes.put("Nord",        new Theme("#2e3440", "#3b4252", "#eceff4", "#5e81ac", "#88c0d0", "#81a1c1", "Verdana"));
         themes.put("Sunset",      new Theme("#2d132c", "#801336", "#fff0f5", "#c72c41", "#ee4540", "#ffb400", "Georgia"));
         themes.put("Mocha",       new Theme("#2c221e", "#3d3029", "#f5ebe0", "#8d5b4c", "#e0a96d", "#d4a373", "Palatino Linotype"));
+    }
+
+    // Persistence: Read Saved Theme Configuration
+    private void loadSavedTheme() {
+        File file = new File(CONFIG_FILE);
+        if (file.exists()) {
+            try (InputStream input = new FileInputStream(file)) {
+                Properties prop = new Properties();
+                prop.load(input);
+                String savedTheme = prop.getProperty("theme");
+                if (savedTheme != null && themes.containsKey(savedTheme)) {
+                    currentTheme = savedTheme;
+                }
+            } catch (IOException ignored) {}
+        }
+    }
+
+    // Persistence: Save Selected Theme Configuration
+    private void saveCurrentTheme(String themeName) {
+        try (OutputStream output = new FileOutputStream(CONFIG_FILE)) {
+            Properties prop = new Properties();
+            prop.setProperty("theme", themeName);
+            prop.store(output, "TimeTrack Preference Config");
+        } catch (IOException ignored) {}
     }
 
     private void setupUI() {
@@ -126,7 +155,7 @@ public class TimeTrackApp extends JFrame {
         bodyPanel.setPreferredSize(new Dimension(300, 300));
         bodyPanel.setLayout(new BoxLayout(bodyPanel, BoxLayout.Y_AXIS));
 
-        // Header Panel (Inlined properly to stay in circle)
+        // Header Panel
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.setMaximumSize(new Dimension(180, 20));
@@ -177,7 +206,7 @@ public class TimeTrackApp extends JFrame {
         modePanel.add(swBtn);
         modePanel.add(tmBtn);
 
-        // Time Display Card
+        // Display Card (Single Click Start/Pause + Double Click Reset)
         cardPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -198,17 +227,17 @@ public class TimeTrackApp extends JFrame {
         cardPanel.add(timeDisplay);
 
         cardPanel.addMouseListener(new MouseAdapter() {
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if (e.getClickCount() == 1) {
-            toggleStart(); // Single click anywhere on time card starts or pauses!
-        } else if (e.getClickCount() == 2) {
-            resetTimer();  // Double click resets!
-        }
-    }
-});
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) {
+                    toggleStart();
+                } else if (e.getClickCount() == 2) {
+                    resetTimer();
+                }
+            }
+        });
 
-        // Compact Timer Input Panel
+        // Compact Timer Input & Presets Panel
         inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
         inputPanel.setOpaque(false);
         inputPanel.setMaximumSize(new Dimension(190, 26));
@@ -232,7 +261,7 @@ public class TimeTrackApp extends JFrame {
         inputPanel.add(p45Btn);
         inputPanel.setVisible(false);
 
-        // Controls Panel
+        // Control Buttons Panel
         ctrlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
         ctrlPanel.setOpaque(false);
         startBtn = createFlatButton("Start");
@@ -243,7 +272,7 @@ public class TimeTrackApp extends JFrame {
         ctrlPanel.add(startBtn);
         ctrlPanel.add(resetBtn);
 
-        // Footer / Theme Dropdown
+        // Footer / Theme Dropdown Selector
         footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         footerPanel.setOpaque(false);
 
@@ -252,11 +281,12 @@ public class TimeTrackApp extends JFrame {
         themeSelector.setSelectedItem(currentTheme);
         themeSelector.addActionListener(e -> {
             currentTheme = (String) themeSelector.getSelectedItem();
+            saveCurrentTheme(currentTheme); // Save preference on change
             applyTheme();
         });
         footerPanel.add(themeSelector);
 
-        // Assembly Inside Circle Frame
+        // Layout Assembly
         bodyPanel.add(Box.createVerticalStrut(32));
         bodyPanel.add(headerPanel);
         bodyPanel.add(Box.createVerticalStrut(6));
