@@ -32,7 +32,7 @@ public class TimeTrackApp extends JFrame {
     }
 
     private final Map<String, Theme> themes = new LinkedHashMap<>();
-    private String currentTheme = "BarbiePink"; // Default theme if no saved config exists
+    private String currentTheme = "BarbiePink"; 
 
     // Application State
     private String mode = "Stopwatch"; 
@@ -65,7 +65,7 @@ public class TimeTrackApp extends JFrame {
         setLocation(screenBounds.width - 320, 80);
 
         initializeThemes();
-        loadSavedTheme(); // Restore theme preference from disk
+        loadSavedTheme();
         setupUI();
         setupDragAndDrop();
         applyTheme();
@@ -89,7 +89,6 @@ public class TimeTrackApp extends JFrame {
         themes.put("Mocha",       new Theme("#2c221e", "#3d3029", "#f5ebe0", "#8d5b4c", "#e0a96d", "#d4a373", "Palatino Linotype"));
     }
 
-    // Persistence: Read Saved Theme Configuration
     private void loadSavedTheme() {
         File file = new File(CONFIG_FILE);
         if (file.exists()) {
@@ -104,7 +103,6 @@ public class TimeTrackApp extends JFrame {
         }
     }
 
-    // Persistence: Save Selected Theme Configuration
     private void saveCurrentTheme(String themeName) {
         try (OutputStream output = new FileOutputStream(CONFIG_FILE)) {
             Properties prop = new Properties();
@@ -158,8 +156,9 @@ public class TimeTrackApp extends JFrame {
         // Header Panel
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
-        headerPanel.setMaximumSize(new Dimension(180, 20));
+        headerPanel.setMaximumSize(new Dimension(185, 20));
 
+        // Title Box with Vector Clock Icon + Hard Spacing Offset
         JPanel titleBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -176,7 +175,10 @@ public class TimeTrackApp extends JFrame {
             }
         };
         titleBox.setOpaque(false);
-        titleLabel = new JLabel("   TimeTrack");
+        
+        // Add 16px explicit gap so text NEVER overlaps the vector clock icon
+        titleLabel = new JLabel("TimeTrack");
+        titleBox.add(Box.createHorizontalStrut(16));
         titleBox.add(titleLabel);
 
         JPanel windowControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 1, 0));
@@ -281,7 +283,7 @@ public class TimeTrackApp extends JFrame {
         themeSelector.setSelectedItem(currentTheme);
         themeSelector.addActionListener(e -> {
             currentTheme = (String) themeSelector.getSelectedItem();
-            saveCurrentTheme(currentTheme); // Save preference on change
+            saveCurrentTheme(currentTheme);
             applyTheme();
         });
         footerPanel.add(themeSelector);
